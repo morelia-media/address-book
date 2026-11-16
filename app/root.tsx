@@ -1,15 +1,23 @@
 import {
   Form,
+  Link,
+  Outlet,
   Scripts,
   ScrollRestoration,
   isRouteErrorResponse,
 } from "react-router";
 import type { Route } from "./+types/root";
-
 import appStylesHref from "./app.css?url";
+import{getContacts} from "./data";
 
-export default function App() {
-  return (
+
+
+
+export default function App({loaderData,
+                            }: Route.ComponentProps){
+  const { contacts } = loaderData;
+
+  return  (
     <>
       <div id="sidebar">
         <h1>React Router Contacts</h1>
@@ -29,15 +37,34 @@ export default function App() {
           </Form>
         </div>
         <nav>
-          <ul>
-            <li>
-              <a href={`/contacts/1`}>Your Name</a>
-            </li>
-            <li>
-              <a href={`/contacts/2`}>Your Friend</a>
-            </li>
-          </ul>
+          {contacts.length ? (
+              <ul>
+                {contacts.map((contact) => (
+                    <li key={contact.id}>
+                      <Link to={`contacts/${contact.id}`}>
+                        {contact.first || contact.last ? (
+                            <>
+                              {contact.first} {contact.last}
+                            </>
+                        ) : (
+                            <i>No Name</i>
+                        )}
+                        {contact.favorite ? (
+                            <span>★</span>
+                        ) : null}
+                      </Link>
+                    </li>
+                ))}
+              </ul>
+          ) : (
+              <p>
+                <i>No contacts</i>
+              </p>
+          )}
         </nav>
+      </div>
+      <div id="detail">
+        <Outlet/>
       </div>
     </>
   );
@@ -91,5 +118,20 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         </pre>
       )}
     </main>
+  );
+}
+
+export async function clientLoader(){
+  const contacts = await getContacts();
+  return {contacts};
+}
+
+export function HydrateFallback() {
+  return (
+      <div id="loading-splash">
+        <div id="loading-splash-spinner" />
+        <p> Loading, please wait...</p>
+      </div>
+
   );
 }
